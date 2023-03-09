@@ -10,7 +10,7 @@
  
  import multer from "multer";
  
- const base = "http://192.168.128.1:3000/"
+ const base = "http://169.254.255.68:3000/"
  const storage = multer.diskStorage({
      destination: function (req: Request, file: unknown, cb) {
          cb(null, "uploads/");
