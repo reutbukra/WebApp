@@ -1,14 +1,16 @@
-import express from 'express'
-const router = express.Router()
-import post from '../controllers/post'
-import auth from '../controllers/auth'
-
 /**
 * @swagger
 * tags:
 *   name: Post
-*   description: The Post API
+*   description: The Posts API
 */
+
+import express from 'express'
+const router = express.Router()
+import post from '../controllers/post.js'
+import auth from '../controllers/auth.js'
+import request from "../request"
+
 /**
 * @swagger
 * components:
@@ -18,6 +20,7 @@ import auth from '../controllers/auth'
 *       required:
 *         - message
 *         - sender
+*         - imageUrl
 *       properties:
 *         message:
 *           type: string
@@ -25,58 +28,91 @@ import auth from '../controllers/auth'
 *         sender:
 *           type: string
 *           description: The sending user id
+*         imageUrl:
+*           type: string
+*           description: The post's image url
+
 *       example:
-*         message: 'This is my new post'
-*         sender: '12345'
+*         message: 'this is my new post'
+*         sender: '12342345234556'
+*         imageUrl: ''
 */
 
-/**
-* @swagger
-* /post:
-*   get:
-*     summary: get list of post from server
-*     tags: [Post]
-*     security:
-*       - bearerAuth: []
-*     parameters:
-*       - in: query
-*         name: sender
-*         schema:
-*           type: string
-*     responses:
-*       200:
-*         description: The list of post
-*         content:
-*           application/json:
-*             schema:
-*               type: array
-*               items:
-*                  $ref: '#/components/schemas/Post'
-*/
-router.get('/',auth.authenticateMiddleware,post.getAllPosts)
 
 /**
-* @swagger
-* /post/{id}:
-*   get:
-*     summary: get post by id
-*     tags: [Post]
-*     security:
-*       - bearerAuth: []
-*     parameters:
-*       - in: path
-*         name: id
-*         schema:
-*           type: string
-*     responses:
-*       200:
-*         description: The requested post
-*         content:
-*           application/json:
-*             schema:
-*               $ref: '#/components/schemas/Post'
-*/
-router.get('/:id',auth.authenticateMiddleware,post.getPostById)
+ * @swagger
+ * /post:
+ *   get:
+ *     summary: get list of post from server
+ *     tags: [Post]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: sender
+ *         schema:
+ *           type: string
+ *           description: filter the posts according to the given sender id
+ *     responses:
+ *       200:
+ *         description: the list of posts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items: 
+ *                  $ref: '#/components/schemas/Post'
+ *  
+ */
+router.get("/", auth.authenticateMiddleware, async (req, res) => {
+    try {
+        const response = await post.getAllPosts(request.fromRestRequest(req))
+        response.sendRestResponse(res)
+    } catch (err) {
+        res.status(400).send({
+            status: "fail",
+            message: err.message,
+        })
+    }
+})
+
+
+
+/**
+ * @swagger
+ * /post/{id}:
+ *   get:
+ *     summary: get post by id
+ *     tags: [Post]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         requiered: true
+ *         schema:
+ *           type: string
+ *           description: the requested post id
+ *     responses:
+ *       200:
+ *         description: the requested post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *  
+ */
+router.get("/:id", auth.authenticateMiddleware, async (req, res) => {
+    try {
+        const response = await post.getPostById(request.fromRestRequest(req))
+        response.sendRestResponse(res)
+    } catch (err) {
+        res.status(400).send({
+            status: "fail",
+            message: err.message,
+        })
+    }
+})
 
 /**
  * @swagger
@@ -101,7 +137,18 @@ router.get('/:id',auth.authenticateMiddleware,post.getPostById)
  *               $ref: '#/components/schemas/Post'
  *  
  */
-router.post('/',auth.authenticateMiddleware,post.addNewPost)
+router.post("/", auth.authenticateMiddleware, async (req, res) => {
+    try {
+        const response = await post.addNewPost(request.fromRestRequest(req))
+        response.sendRestResponse(res)
+    } catch (err) {
+        res.status(400).send({
+            status: "fail",
+            message: err.message,
+        })
+    }
+})
+
 
 /**
  * @swagger
@@ -133,6 +180,58 @@ router.post('/',auth.authenticateMiddleware,post.addNewPost)
  *               $ref: '#/components/schemas/Post'
  *  
  */
-router.put('/:id',auth.authenticateMiddleware,post.putPostById)
+router.put("/:id", auth.authenticateMiddleware, async (req, res) => {
+    console.log("updatePostById here")
+    try {
+        const response = await post.updatePostById(request.fromRestRequest(req))
+        response.sendRestResponse(res);
+    } catch (err) {
+        res.status(400).send({
+            status: "fail",
+            message: err.message,
+        })
+    }
+})
+
+
+/**
+ * @swagger
+ * /post/{id}:
+ *   delete:
+ *     summary: delete post by id
+ *     tags: [Post]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         requiered: true
+ *         schema:
+ *           type: string
+ *           description: the requested post id
+ *     responses:
+ *       200:
+ *         description: the requested post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *
+ */
+
+router.delete("/:id", auth.authenticateMiddleware, async (req, res) => {
+    console.log('1111?')
+    try {
+        const response = await post.deletePostById(
+            request.fromRestRequest(req)
+        );
+        response.sendRestResponse(res);
+    } catch (err) {
+        res.status(400).send({
+            status: "fail",
+            message: err.message,
+        });
+    }
+});
 
 export = router
