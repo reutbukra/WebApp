@@ -1,17 +1,27 @@
 "use strict";
+/**
+* @swagger
+* tags:
+*   name: Post
+*   description: The Posts API
+*/
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 const express_1 = __importDefault(require("express"));
 const router = express_1.default.Router();
-const post_1 = __importDefault(require("../controllers/post"));
-const auth_1 = __importDefault(require("../controllers/auth"));
-/**
-* @swagger
-* tags:
-*   name: Post
-*   description: The Post API
-*/
+const post_js_1 = __importDefault(require("../controllers/post.js"));
+const auth_js_1 = __importDefault(require("../controllers/auth.js"));
+const request_1 = __importDefault(require("../request"));
 /**
 * @swagger
 * components:
@@ -21,6 +31,7 @@ const auth_1 = __importDefault(require("../controllers/auth"));
 *       required:
 *         - message
 *         - sender
+*         - imageUrl
 *       properties:
 *         message:
 *           type: string
@@ -28,56 +39,88 @@ const auth_1 = __importDefault(require("../controllers/auth"));
 *         sender:
 *           type: string
 *           description: The sending user id
+*         imageUrl:
+*           type: string
+*           description: The post's image url
+
 *       example:
-*         message: 'This is my new post'
-*         sender: '12345'
+*         message: 'this is my new post'
+*         sender: '12342345234556'
+*         imageUrl: ''
 */
 /**
-* @swagger
-* /post:
-*   get:
-*     summary: get list of post from server
-*     tags: [Post]
-*     security:
-*       - bearerAuth: []
-*     parameters:
-*       - in: query
-*         name: sender
-*         schema:
-*           type: string
-*     responses:
-*       200:
-*         description: The list of post
-*         content:
-*           application/json:
-*             schema:
-*               type: array
-*               items:
-*                  $ref: '#/components/schemas/Post'
-*/
-router.get('/', auth_1.default.authenticateMiddleware, post_1.default.getAllPosts);
+ * @swagger
+ * /post:
+ *   get:
+ *     summary: get list of post from server
+ *     tags: [Post]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: sender
+ *         schema:
+ *           type: string
+ *           description: filter the posts according to the given sender id
+ *     responses:
+ *       200:
+ *         description: the list of posts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                  $ref: '#/components/schemas/Post'
+ *
+ */
+router.get("/", auth_js_1.default.authenticateMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const response = yield post_js_1.default.getAllPosts(request_1.default.fromRestRequest(req));
+        response.sendRestResponse(res);
+    }
+    catch (err) {
+        res.status(400).send({
+            status: "fail",
+            message: err.message,
+        });
+    }
+}));
 /**
-* @swagger
-* /post/{id}:
-*   get:
-*     summary: get post by id
-*     tags: [Post]
-*     security:
-*       - bearerAuth: []
-*     parameters:
-*       - in: path
-*         name: id
-*         schema:
-*           type: string
-*     responses:
-*       200:
-*         description: The requested post
-*         content:
-*           application/json:
-*             schema:
-*               $ref: '#/components/schemas/Post'
-*/
-router.get('/:id', auth_1.default.authenticateMiddleware, post_1.default.getPostById);
+ * @swagger
+ * /post/{id}:
+ *   get:
+ *     summary: get post by id
+ *     tags: [Post]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         requiered: true
+ *         schema:
+ *           type: string
+ *           description: the requested post id
+ *     responses:
+ *       200:
+ *         description: the requested post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *
+ */
+router.get("/:id", auth_js_1.default.authenticateMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const response = yield post_js_1.default.getPostById(request_1.default.fromRestRequest(req));
+        response.sendRestResponse(res);
+    }
+    catch (err) {
+        res.status(400).send({
+            status: "fail",
+            message: err.message,
+        });
+    }
+}));
 /**
  * @swagger
  * /post:
@@ -101,7 +144,18 @@ router.get('/:id', auth_1.default.authenticateMiddleware, post_1.default.getPost
  *               $ref: '#/components/schemas/Post'
  *
  */
-router.post('/', auth_1.default.authenticateMiddleware, post_1.default.addNewPost);
+router.post("/", auth_js_1.default.authenticateMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const response = yield post_js_1.default.addNewPost(request_1.default.fromRestRequest(req));
+        response.sendRestResponse(res);
+    }
+    catch (err) {
+        res.status(400).send({
+            status: "fail",
+            message: err.message,
+        });
+    }
+}));
 /**
  * @swagger
  * /post/{id}:
@@ -132,6 +186,55 @@ router.post('/', auth_1.default.authenticateMiddleware, post_1.default.addNewPos
  *               $ref: '#/components/schemas/Post'
  *
  */
-router.put('/:id', auth_1.default.authenticateMiddleware, post_1.default.putPostById);
+router.put("/:id", auth_js_1.default.authenticateMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("updatePostById here");
+    try {
+        const response = yield post_js_1.default.updatePostById(request_1.default.fromRestRequest(req));
+        response.sendRestResponse(res);
+    }
+    catch (err) {
+        res.status(400).send({
+            status: "fail",
+            message: err.message,
+        });
+    }
+}));
+/**
+ * @swagger
+ * /post/{id}:
+ *   delete:
+ *     summary: delete post by id
+ *     tags: [Post]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         requiered: true
+ *         schema:
+ *           type: string
+ *           description: the requested post id
+ *     responses:
+ *       200:
+ *         description: the requested post
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Post'
+ *
+ */
+router.delete("/:id", auth_js_1.default.authenticateMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('1111?');
+    try {
+        const response = yield post_js_1.default.deletePostById(request_1.default.fromRestRequest(req));
+        response.sendRestResponse(res);
+    }
+    catch (err) {
+        res.status(400).send({
+            status: "fail",
+            message: err.message,
+        });
+    }
+}));
 module.exports = router;
 //# sourceMappingURL=post_route.js.map

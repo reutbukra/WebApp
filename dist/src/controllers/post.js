@@ -12,114 +12,89 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 const post_model_1 = __importDefault(require("../models/post_model"));
-let id_user = '';
-let post_id = '';
-const getAllPostsEvent = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const posts = yield post_model_1.default.find();
-        return { status: 'OK', data: posts };
-    }
-    catch (err) {
-        return { status: 'FAIL', data: [] };
-    }
-});
-const getPostBySenderEvent = (sender) => __awaiter(void 0, void 0, void 0, function* () {
-    let posts = {};
-    try {
-        posts = yield post_model_1.default.find({ 'sender': sender.sender });
-        return { status: 'OK', data: posts };
-    }
-    catch (err) {
-        return { status: 'FAIL', data: posts };
-    }
-});
-const getAllPosts = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const response_1 = __importDefault(require("../response"));
+const error_1 = __importDefault(require("../error"));
+const getAllPosts = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("new version of get all posts");
     try {
         let posts = {};
-        if (req.query.sender == null) {
-            posts = yield post_model_1.default.find();
+        console.log("getAllPosts");
+        console.log("req");
+        console.log(req);
+        if (req.query != null && req.query.sender != null) {
+            posts = yield post_model_1.default.find({ sender: req.query.sender });
         }
         else {
-            posts = yield post_model_1.default.find({ 'sender': req.query.sender });
+            posts = yield post_model_1.default.find();
         }
-        res.status(200).send(posts);
+        return new response_1.default(posts, req.userId, null);
     }
     catch (err) {
-        res.status(400).send({ 'error': "fail to get posts from db" });
+        console.log("err");
+        return new response_1.default(null, req.userId, new error_1.default(400, err.message));
     }
 });
-const getPostByIdEvent = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    id_user = id.id;
-    let posts = {};
-    try {
-        posts = yield post_model_1.default.findById(id.id);
-        return { status: 'OK', data: posts, id: id_user };
-    }
-    catch (err) {
-        return { status: 'FAIL', data: posts };
-    }
-});
-const getPostById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getPostById = (req) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(req.params.id);
     try {
         const posts = yield post_model_1.default.findById(req.params.id);
-        res.status(200).send(posts);
+        return new response_1.default(posts, req.userId, null);
     }
     catch (err) {
-        res.status(400).send({ 'error': "fail to get posts from db" });
+        console.log("fail to get post from db");
+        return new response_1.default(null, req.userId, new error_1.default(400, err.message));
     }
 });
-const addNewPostEvent = () => __awaiter(void 0, void 0, void 0, function* () {
+const addNewPost = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("in add new post");
+    console.log("message: " + req.body["message"]);
+    console.log("sender: " + req.body["sender"]);
+    console.log("image: " + req.body["image"]);
     const post = new post_model_1.default({
-        message: 'this is my new message',
-        sender: '12345'
+        message: req.body["message"],
+        sender: req.body["sender"],
+        imageUrl: req.body["image"]
     });
-    try {
-        const newPost = yield post.save();
-        post_id = post.id;
-        console.log("save post in db");
-        return { status: 'OK', data: newPost };
+    if (post.imageUrl == "") {
+        console.log("image string emptyyyyyyyy");
     }
-    catch (err) {
-        return { status: 'FAIL', data: [] };
-    }
-});
-const addNewPost = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.body);
-    const post = new post_model_1.default({
-        message: req.body.message,
-        sender: req.body.sender
-    });
     try {
         const newPost = yield post.save();
         console.log("save post in db");
-        res.status(200).send(newPost);
+        return new response_1.default(newPost, req.userId, null);
     }
     catch (err) {
         console.log("fail to save post in db");
-        res.status(400).send({ 'error': 'fail adding new post to db' });
+        return new response_1.default(null, req.userId, new error_1.default(400, err.message));
     }
 });
-const putPostByIdEvent = () => __awaiter(void 0, void 0, void 0, function* () {
+const updatePostById = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("updatePostById");
     try {
-        const post = yield post_model_1.default.findByIdAndUpdate(post_id, { message: "This is the updated message" }, { new: true });
-        return { status: 'OK', data: post };
-    }
-    catch (err) {
-        console.log("fail to update post in db");
-        return { status: 'FAIL', data: [] };
-    }
-});
-const putPostById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
+        console.log('tairrrrr', req);
+        console.log('req.body', req.body);
         const post = yield post_model_1.default.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.status(200).send(post);
+        console.log(post);
+        return new response_1.default(post, req.userId, null);
     }
     catch (err) {
         console.log("fail to update post in db");
-        res.status(400).send({ 'error': 'fail adding new post to db' });
+        return new response_1.default(null, req.userId, new error_1.default(400, err.message));
     }
 });
-module.exports = { getAllPosts, addNewPost, getPostById, putPostById,
-    getAllPostsEvent, addNewPostEvent, getPostByIdEvent, getPostBySenderEvent, putPostByIdEvent };
+const deletePostById = (req) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('2222?');
+    console.log(req.params.id);
+    try {
+        yield post_model_1.default.findByIdAndDelete(req.params.id);
+        console.log("delete post from db");
+        return new response_1.default(null, req.userId, null);
+    }
+    catch (err) {
+        console.log("fail to delete post");
+        console.log(err);
+        return new response_1.default(null, req.userId, new error_1.default(400, err.message));
+    }
+});
+module.exports = { getAllPosts, addNewPost, getPostById, updatePostById, deletePostById };
 //# sourceMappingURL=post.js.map
